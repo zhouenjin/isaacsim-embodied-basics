@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+
+# Isaac Sim / logs
+logs/
+*.log
+
+# Local outputs
+outputs/
+
+# IDE / OS
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
