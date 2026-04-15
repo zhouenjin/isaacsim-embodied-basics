@@ -118,6 +118,10 @@ conda activate env_isaacsim
 cd D:\isaacsim-embodied-basics
 ```
 
+## License
+
+This project is released under the [MIT License](./LICENSE).
+
 Then run a script, for example:
 
 ```powershell
