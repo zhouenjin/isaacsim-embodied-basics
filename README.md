@@ -2,15 +2,19 @@
 
 This repository records my first hands-on Isaac Sim exercises while learning embodied AI.
 
-The goal of this project is not to build a complete robot system yet. It is to understand the core building blocks clearly:
+The project goal is not to build a full robot system yet. The current goal is to understand the core stack clearly and quickly:
 
-- how a scene is created
-- how a cube falls under physics
-- why `RigidBody` and `Collision` are different
-- what a Prim / API / Attribute means in practice
-- how USD assets are loaded into a stage
-- how to read robot hand and tool-center poses
-- how a camera relates to world coordinates and local coordinates
+- scene setup
+- physics basics
+- Prim / API / Attribute
+- USD loading
+- camera basics
+- Franka robot structure
+- joint control
+- gripper control
+- target evaluation
+- inverse kinematics (IK)
+- closed-loop target following
 
 ## What I Learned
 
@@ -21,9 +25,15 @@ This repository currently covers:
 - camera RGB capture
 - Prim and applied schema inspection
 - USD loading and transform control
+- rigid body vs collision behavior
 - Franka robot structure understanding
 - end-effector / tool-center pose reading
-- rigid body vs collision behavior
+- Franka joint and gripper control
+- target distance evaluation
+- pose comparison and simple pose search
+- inverse kinematics for target reaching
+- inverse kinematics with target orientation
+- closed-loop target following with repeated IK
 
 ## Environment
 
@@ -35,79 +45,117 @@ This repository currently covers:
 
 ```text
 isaacsim-embodied-basics/
-├── README.md
-├── .gitignore
-└── scripts/
-    ├── first_scene.py
-    ├── camera_scene.py
-    ├── prim_intro.py
-    ├── usd_intro.py
-    ├── franka_intro.py
-    ├── rigid_only.py
-    └── rigid_collision.py
+|-- README.md
+|-- .gitignore
+`-- scripts/
+    |-- first_scene.py
+    |-- camera_scene.py
+    |-- collision_helper.py
+    |-- prim_intro.py
+    |-- usd_intro.py
+    |-- franka_intro.py
+    |-- franka_joints.py
+    |-- franka_move_joint1.py
+    |-- franka_pose_target.py
+    |-- franka_gripper.py
+    |-- franka_target_task.py
+    |-- franka_pose_compare.py
+    |-- franka_pose_search.py
+    |-- franka_ik_reach.py
+    |-- franka_ik_pose.py
+    |-- franka_follow_target_ik.py
+    |-- franka_reach_loop.py
+    |-- rigid_only.py
+    |-- rigid_collision.py
+    `-- rigid_no_gravity.py
 ```
 
 ## Scripts
 
-### `scripts/first_scene.py`
+### Scene and physics
 
-Creates a minimal scene and drops a cube.
+- `scripts/first_scene.py`
+  Minimal falling-cube scene.
 
-Key point:
-- the simplest possible Isaac Sim physics example
+- `scripts/rigid_only.py`
+  Rigid body without collision. The cube falls through the ground.
 
-### `scripts/camera_scene.py`
+- `scripts/rigid_collision.py`
+  Rigid body with collision. The cube falls and stops on the ground.
 
-Creates a cube and captures an RGB image from a camera.
-
-Key point:
-- camera pose determines what the image sees
-
-### `scripts/prim_intro.py`
-
-Inspects a cube Prim, its applied schemas, and its attributes.
+- `scripts/rigid_no_gravity.py`
+  Rigid body with gravity disabled. The cube stays suspended.
 
 Key point:
-- understand `Prim`, `API`, and `Attribute` through a real object
+- understand the difference between entering the physics system, colliding, and being affected by gravity
 
-### `scripts/usd_intro.py`
+### Camera, Prim, and USD
 
-Loads a saved USD scene into the current stage and reads / modifies pose information.
+- `scripts/camera_scene.py`
+  Create a cube and capture an RGB image.
 
-Key point:
-- understand how USD assets are mounted and transformed
+- `scripts/prim_intro.py`
+  Inspect Prim path, schemas, and attributes.
 
-### `scripts/franka_intro.py`
+- `scripts/usd_intro.py`
+  Load a USD scene and manipulate poses.
 
-Loads a Franka robot and prints:
-
-- robot world pose
-- hand world pose
-- tool-center world pose
-- target vector and distance
+- `scripts/collision_helper.py`
+  Helper for applying mesh collision approximations such as `convexHull`, `convexDecomposition`, and `sdf`.
 
 Key point:
-- understand the geometry relation between robot end-effector and task target
+- understand scene representation and how geometry, metadata, and assets are wired together
 
-### `scripts/rigid_only.py`
+### Franka structure and direct control
 
-Applies rigid body behavior without collision.
+- `scripts/franka_intro.py`
+  Read Franka world pose, hand pose, tool-center pose, and target relation.
 
-Observed result:
-- the cube falls through the ground
+- `scripts/franka_joints.py`
+  Print all controllable Franka joints.
+
+- `scripts/franka_move_joint1.py`
+  Move one joint to understand single-DOF control.
+
+- `scripts/franka_pose_target.py`
+  Apply a full 9-DOF Franka target pose.
+
+- `scripts/franka_gripper.py`
+  Open and close the gripper.
 
 Key point:
-- `RigidBody` alone does not create collision geometry
+- understand articulation control from one joint to the full robot
 
-### `scripts/rigid_collision.py`
+### Target evaluation and simple search
 
-Applies both rigid body and collision.
+- `scripts/franka_target_task.py`
+  Add a target cube and compute tool-center to target geometry.
 
-Observed result:
-- the cube falls and stops on the ground
+- `scripts/franka_pose_compare.py`
+  Compare two candidate poses and choose the closer one.
+
+- `scripts/franka_pose_search.py`
+  Evaluate several candidate poses and select the best one.
+
+- `scripts/franka_reach_loop.py`
+  Use a crude hand-written closed-loop heuristic to iteratively reduce target error.
 
 Key point:
-- collision is what allows physical contact
+- understand the minimal embodied loop of state, action candidate, evaluation, and repeated correction
+
+### Inverse kinematics
+
+- `scripts/franka_ik_reach.py`
+  Use IK to reach a target position.
+
+- `scripts/franka_ik_pose.py`
+  Use IK to reach a target position with a target orientation.
+
+- `scripts/franka_follow_target_ik.py`
+  Continuously recompute IK to follow a moving target.
+
+Key point:
+- move from hand-written joint updates to solver-based task-space control
 
 ## How To Run
 
@@ -122,26 +170,28 @@ cd D:\isaacsim-embodied-basics
 
 This project is released under the [MIT License](./LICENSE).
 
-Then run a script, for example:
+Then run scripts such as:
 
 ```powershell
 python .\scripts\prim_intro.py
-python .\scripts\rigid_only.py
 python .\scripts\rigid_collision.py
-python .\scripts\franka_intro.py
+python .\scripts\franka_joints.py
+python .\scripts\franka_ik_reach.py
+python .\scripts\franka_ik_pose.py
+python .\scripts\franka_follow_target_ik.py
 ```
 
 ## Notes
 
 - These scripts are intentionally small and focused.
 - They are built for learning, not for production deployment.
-- Isaac Sim 5.1.0 may print deprecation warnings; they do not affect the main learning goals here.
+- Isaac Sim 5.1.0 prints some deprecation and performance warnings; they do not block the main learning goals here.
 
 ## Next Steps
 
 Planned future additions:
 
-- articulated robot control
 - camera mounted on robot links
-- grasping / pick-and-place style tasks
+- image-based target localization
+- simple pick-and-place skeleton
 - more structured embodied AI mini-projects
